@@ -62,9 +62,27 @@ void app_main() {
 	paintBlack->DrawFilledRectangle(10, 10, 50, 50, COLOR);
 	paintRed->DrawFilledCircle(50, 50, 20, COLOR);
 	paintRed->DrawFilledRectangle(10, 10, 50, 50, BLANK);
-	
+
 	ESP_LOGI(LOGTAG, "Start Refresh");
 	epd->DisplayFrame(imgBlack, imgRed);
+
+	ESP_LOGI(LOGTAG, "Reading Buttons");
+	b = 0;
+	while (b != 1) {
+		b = btn->getState();
+		ESP_LOGE("Buttons", "%02X", b);
+		vTaskDelay(500 / portTICK_RATE_MS);
+	}
+
+	ESP_LOGI(LOGTAG, "Adding to Paints");
+	paintBlack->DrawFilledCircle(100, 100, 25, COLOR);
+	paintRed->DrawFilledCircle(150, 100, 25, COLOR);
+
+	ESP_LOGI(LOGTAG, "Partial Refresh");
+	Paint::point_t pt1, pt2;
+	pt1 = paintBlack->GetAbsoluteLocation(75, 75);
+	pt2 = paintBlack->GetAbsoluteLocation(75+100, 75+50);
+	epd->DisplayArea(imgBlack, imgRed, pt1.x, pt2.y, pt2.x-pt1.x, pt1.y-pt2.y);
 }
 
 }
