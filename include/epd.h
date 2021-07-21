@@ -1,3 +1,6 @@
+#ifndef __HELLO_EPD__
+#define __HELLO_EPD__
+
 #include <stdint.h>
 #include "spibus.h"
 
@@ -8,3 +11,5 @@ class EPD {
 		spi_host_device_t _spi_host;
 		spi_device_handle_t _spi_device_handle;
 };
+
+#endif

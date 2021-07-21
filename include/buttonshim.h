@@ -1,3 +1,6 @@
+#ifndef __HELLO_BUTTONSHIM__
+#define __HELLO_BUTTONSHIM__
+
 #include <stdint.h>
 #include <driver/i2c.h>
 #include "tca9554a.h"
@@ -16,3 +19,5 @@ class ButtonShim {
 	private:
 		TCA9554A* _iox;
 };
+
+#endif

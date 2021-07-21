@@ -1,3 +1,6 @@
+#ifndef __HELLO_TCA9554A__
+#define __HELLO_TCA9554A__
+
 #include <stdint.h>
 #include <driver/i2c.h>
 
@@ -20,3 +23,5 @@ class TCA9554A {
 			CONFIG = 3
 		} _reg_addr;
 };
+
+#endif
