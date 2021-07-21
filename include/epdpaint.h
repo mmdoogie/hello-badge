@@ -67,6 +67,12 @@ public:
     static const int INVERT = 1;
     static const int NO_INVERT = 0;
 
+    typedef struct {
+        int x;
+        int y;
+    } point_t;
+    point_t GetAbsoluteLocation(int x, int y);
+
 private:
     unsigned char* image;
     int width;

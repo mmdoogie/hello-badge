@@ -147,6 +147,40 @@ void Paint::DrawPixel(int x, int y, int colored) {
     }
 }
 
+Paint::point_t Paint::GetAbsoluteLocation(int x, int y) {
+    point_t ret;
+    ret.x = -1;
+    ret.y = -1;
+
+    if (this->rotate == ROTATE_0) {
+        if(x < 0 || x >= this->width || y < 0 || y >= this->height) {
+            return ret;
+        }
+        ret.x = x;
+        ret.y = y;
+    } else if (this->rotate == ROTATE_90) {
+        if(x < 0 || x >= this->height || y < 0 || y >= this->width) {
+          return ret;
+        }
+        ret.x = this->width - y;
+        ret.y = x;
+    } else if (this->rotate == ROTATE_180) {
+        if(x < 0 || x >= this->width || y < 0 || y >= this->height) {
+          return ret;
+        }
+        ret.x = this->width - x;
+        ret.y = this->height - y;
+    } else if (this->rotate == ROTATE_270) {
+        if(x < 0 || x >= this->height || y < 0 || y >= this->width) {
+          return ret;
+        }
+        ret.x = y;
+        ret.y = this->height - x;
+    }
+
+    return ret;
+}
+
 /**
  *  @brief: this draws a charactor on the frame buffer but not refresh
  */
