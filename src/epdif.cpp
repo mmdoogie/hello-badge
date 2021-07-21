@@ -47,6 +47,8 @@ int EpdIf::DigitalRead(gpio_num_t pin) {
 }
 
 void EpdIf::DelayMs(unsigned int delaytime) {
+    TickType_t ticks = delaytime / portTICK_RATE_MS;
+    if (ticks == 0) ticks++;
     vTaskDelay(delaytime / portTICK_RATE_MS);
 }
 
