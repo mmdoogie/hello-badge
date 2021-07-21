@@ -1,10 +1,12 @@
 #include "tca9554a.h"
+#include <string.h>
 
 TCA9554A::TCA9554A(i2c_port_t i2c_port, uint8_t i2c_addr, gpio_num_t i2c_scl_gpio, gpio_num_t i2c_sda_gpio, uint32_t i2c_freq) {
 	_i2c_port = i2c_port;
 	_i2c_addr = i2c_addr;
 
 	i2c_config_t c;
+	memset(&c, 0, sizeof(i2c_config_t));
 	c.mode = I2C_MODE_MASTER;
 	c.scl_io_num = i2c_scl_gpio;
 	c.sda_io_num = i2c_sda_gpio;
