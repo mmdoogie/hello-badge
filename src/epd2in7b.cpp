@@ -31,21 +31,12 @@ Epd::~Epd() {
 };
 
 Epd::Epd() {
-    reset_pin = RST_PIN;
-    dc_pin = DC_PIN;
-    cs_pin = CS_PIN;
-    busy_pin = BUSY_PIN;
     width = EPD_WIDTH;
     height = EPD_HEIGHT;
 };
 
-int Epd::SpiInit(void) {
-    /* this calls the peripheral hardware interface, see epdif */
-    if (IfInit() != 0) {
-        return -1;
-    } else {
-        return 0;
-    }
+int Epd::SpiInit(SPIBus* bus) {
+    return IfInit(bus);
 }
 
 void Epd::DispInit(void) {
@@ -107,7 +98,7 @@ void Epd::DispInit(void) {
  *  @brief: basic function for sending commands
  */
 void Epd::SendCommand(unsigned char command) {
-    DigitalWrite(dc_pin, 0);
+    DigitalWrite(EPD_DC, 0);
     SpiTransfer(command);
 }
 
@@ -115,7 +106,7 @@ void Epd::SendCommand(unsigned char command) {
  *  @brief: basic function for sending data
  */
 void Epd::SendData(unsigned char data) {
-    DigitalWrite(dc_pin, 1);
+    DigitalWrite(EPD_DC, 1);
     SpiTransfer(data);
 }
 
@@ -123,7 +114,7 @@ void Epd::SendData(unsigned char data) {
  *  @brief: Wait until the busy_pin goes HIGH
  */
 void Epd::WaitUntilIdle(void) {
-    while(DigitalRead(busy_pin) == 0) {      //0: busy, 1: idle
+    while(DigitalRead(EPD_BUSY) == 0) {      //0: busy, 1: idle
         DelayMs(100);
     }      
 }
@@ -134,9 +125,12 @@ void Epd::WaitUntilIdle(void) {
  *          see EPD::Sleep();
  */
 void Epd::Reset(void) {
-    DigitalWrite(reset_pin, 0);                //module reset    
+    DigitalWrite(EPD_ENA, 1);
+    DigitalWrite(EPD_RST, 1);
     DelayMs(200);
-    DigitalWrite(reset_pin, 1);
+    DigitalWrite(EPD_RST, 0);                //module reset    
+    DelayMs(20);
+    DigitalWrite(EPD_RST, 1);
     DelayMs(200);    
 }
 
@@ -240,6 +234,8 @@ void Epd::Sleep() {
     SendCommand(POWER_OFF);
     SendCommand(DEEP_SLEEP);
     SendData(0xA5);
+    DelayMs(20);
+    DigitalWrite(EPD_ENA, 0);
 }
 
 const unsigned char lut_vcom[] =

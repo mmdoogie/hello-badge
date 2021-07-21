@@ -29,6 +29,8 @@
 
 #include "epdif.h"
 #include "driver/gpio.h"
+#include "spibus.h"
+#include "hello_config.h"
 
 // Display resolution
 #define EPD_WIDTH       264
@@ -87,7 +89,7 @@ public:
 
     Epd();
     ~Epd();
-    int  SpiInit(void);
+    int  SpiInit(SPIBus* bus);
     void DispInit(void);
     void SendCommand(unsigned char command);
     void SendData(unsigned char data);
@@ -99,10 +101,6 @@ public:
     void Sleep(void);
 
 private:
-    gpio_num_t reset_pin;
-    gpio_num_t dc_pin;
-    gpio_num_t cs_pin;
-    gpio_num_t busy_pin;
 };
 
 #endif /* EPD2IN7B_H */
