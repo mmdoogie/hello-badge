@@ -37,7 +37,6 @@ EpdIf::~EpdIf() {
 };
 
 void EpdIf::DigitalWrite(gpio_num_t pin, int value) {
-    // ESP_LOGI("EPDIF", "Set Pin %i: %i", pin, value);
     gpio_set_level(pin, value);
 }
 
@@ -66,11 +65,11 @@ void EpdIf::SpiTransfer(unsigned char data) {
     assert(ret==ESP_OK);            //Should have had no issues.
 }
 
-int EpdIf::IfInit(void) {
+int EpdIf::IfInit(SPIBus* bus) {
     gpio_config_t io_conf;
     io_conf.intr_type = GPIO_INTR_DISABLE;
     io_conf.mode = GPIO_MODE_OUTPUT;
-    io_conf.pin_bit_mask = ((uint64_t)1<<(uint64_t)DC_PIN) | ((uint64_t)1<<(uint64_t)RST_PIN);
+    io_conf.pin_bit_mask = ((uint64_t)1<<(uint64_t)EPD_DC) | ((uint64_t)1<<(uint64_t)EPD_RST | ((uint64_t)1<<(uint64_t)EPD_ENA);
     io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
     io_conf.pull_up_en = GPIO_PULLUP_ENABLE;
     ESP_ERROR_CHECK(gpio_config(&io_conf));
@@ -78,41 +77,12 @@ int EpdIf::IfInit(void) {
     gpio_config_t i_conf;
     i_conf.intr_type = GPIO_INTR_DISABLE;
     i_conf.mode = GPIO_MODE_INPUT;
-    i_conf.pin_bit_mask = ((uint64_t)1<<(uint64_t)BUSY_PIN);
+    i_conf.pin_bit_mask = ((uint64_t)1<<(uint64_t)EPD_BUSY);
     i_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
     i_conf.pull_up_en = GPIO_PULLUP_DISABLE;
     ESP_ERROR_CHECK(gpio_config(&i_conf));
 
-    // gpio_set_direction(DC_PIN, GPIO_MODE_OUTPUT);
-    // gpio_set_direction(RST_PIN, GPIO_MODE_OUTPUT);
-    // gpio_set_direction(BUSY_PIN, GPIO_MODE_INPUT); 
-
     esp_err_t ret;
-
-    spi_bus_config_t buscfg;
-    memset(&buscfg, 0, sizeof(buscfg));
-    buscfg.mosi_io_num = MOSI_PIN;
-    buscfg.sclk_io_num = CLK_PIN;
-    buscfg.miso_io_num = -1;
-    buscfg.quadwp_io_num = -1;
-    buscfg.quadhd_io_num = -1;
-
-    //Initialize the SPI bus
-    ret=spi_bus_initialize(HSPI_HOST, &buscfg, 0);
-    switch (ret) {
-        case ESP_ERR_INVALID_ARG:
-            ESP_LOGE("EPDIF", "INVALID ARG");
-            break;
-        case ESP_ERR_INVALID_STATE:
-            ESP_LOGE("EPDIF", "INVALID STATE");
-            break;
-        case ESP_ERR_NO_MEM:
-            ESP_LOGE("EPDIF", "INVALID NO MEMORY");
-            break;
-        case ESP_OK:
-            ESP_LOGE("EPDIF", "All OK");
-    }
-    assert(ret==ESP_OK);
 
     spi_device_interface_config_t devcfg;
     memset(&devcfg, 0, sizeof(devcfg));
@@ -121,11 +91,11 @@ int EpdIf::IfInit(void) {
     devcfg.dummy_bits = 0;
     devcfg.clock_speed_hz = 2*1000*1000;
     devcfg.mode = 0;
-    devcfg.spics_io_num = CS_PIN;
+    devcfg.spics_io_num = SPI_CS_EPD;
     devcfg.queue_size = 1;
 
     //Attach the EPD to the SPI bus
-    ret=spi_bus_add_device(HSPI_HOST, &devcfg, &spi);
+    ret=spi_bus_add_device(bus->getHost(), &devcfg, &spi);
     assert(ret==ESP_OK);
 
     return 0;

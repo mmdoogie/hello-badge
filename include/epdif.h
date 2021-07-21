@@ -37,21 +37,15 @@
 #include "driver/spi_master.h"
 #include "soc/gpio_struct.h"
 #include "driver/gpio.h"
-
-// Pin definition
-#define MOSI_PIN        GPIO_NUM_27
-#define CLK_PIN         GPIO_NUM_26
-#define CS_PIN          GPIO_NUM_25
-#define DC_PIN          GPIO_NUM_33
-#define RST_PIN         GPIO_NUM_32
-#define BUSY_PIN        GPIO_NUM_35
+#include "hello_config.h"
+#include "spibus.h"
 
 class EpdIf {
 public:
     EpdIf(void);
     ~EpdIf(void);
 
-    static int  IfInit(void);
+    static int  IfInit(SPIBus* bus);
     static void DigitalWrite(gpio_num_t pin, int value); 
     static int  DigitalRead(gpio_num_t pin);
     static void DelayMs(unsigned int delaytime);
