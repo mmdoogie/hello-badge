@@ -28,10 +28,11 @@
 #define EPD2IN7B_H
 
 #include "epdif.h"
+#include "driver/gpio.h"
 
 // Display resolution
-#define EPD_WIDTH       176
-#define EPD_HEIGHT      264
+#define EPD_WIDTH       264
+#define EPD_HEIGHT      176
 
 // EPD2IN7B commands
 #define PANEL_SETTING                               0x00
@@ -46,14 +47,14 @@
 #define DATA_STOP                                   0x11
 #define DISPLAY_REFRESH                             0x12
 #define DATA_START_TRANSMISSION_2                   0x13
-#define PARTIAL_DATA_START_TRANSMISSION_1           0x14 
-#define PARTIAL_DATA_START_TRANSMISSION_2           0x15 
-#define PARTIAL_DISPLAY_REFRESH                     0x16
-#define LUT_FOR_VCOM                                0x20 
-#define LUT_WHITE_TO_WHITE                          0x21
-#define LUT_BLACK_TO_WHITE                          0x22
-#define LUT_WHITE_TO_BLACK                          0x23
-#define LUT_BLACK_TO_BLACK                          0x24
+#define PARTIAL_DATA_START_TRANSMISSION_1           0x14
+#define PARTIAL_DATA_START_TRANSMISSION_2           0x15
+#define DISPLAY_PARTIAL_REFRESH                     0x16
+#define LUT_FOR_VCOM                                0x20
+#define LUT_FOR_WHITE_TO_WHITE                      0x21
+#define LUT_FOR_BLACK_TO_WHITE                      0x22
+#define LUT_FOR_WHITE_TO_BLACK                      0x23
+#define LUT_FOR_BLACK_TO_BLACK                      0x24
 #define PLL_CONTROL                                 0x30
 #define TEMPERATURE_SENSOR_COMMAND                  0x40
 #define TEMPERATURE_SENSOR_CALIBRATION              0x41
@@ -71,8 +72,9 @@
 #define PROGRAM_MODE                                0xA0
 #define ACTIVE_PROGRAM                              0xA1
 #define READ_OTP_DATA                               0xA2
+#define POWER_OPTIMIZATION                          0xF8
 
-extern const unsigned char lut_vcom_dc[];
+extern const unsigned char lut_vcom[];
 extern const unsigned char lut_ww[];
 extern const unsigned char lut_bw[];
 extern const unsigned char lut_bb[];
@@ -80,33 +82,27 @@ extern const unsigned char lut_wb[];
 
 class Epd : EpdIf {
 public:
-    unsigned int width;
-    unsigned int height;
+    int width;
+    int height;
 
     Epd();
     ~Epd();
-    int  Init(void);
+    int  SpiInit(void);
+    void DispInit(void);
     void SendCommand(unsigned char command);
     void SendData(unsigned char data);
     void WaitUntilIdle(void);
     void Reset(void);
     void SetLut(void);
-    void TransmitPartial(const unsigned char* buffer_black, const unsigned char* buffer_red, int x, int y, int w, int l);
-    void TransmitPartialBlack(const unsigned char* buffer_black, int x, int y, int w, int l);
-    void TransmitPartialRed(const unsigned char* buffer_red, int x, int y, int w, int l);
-    void RefreshPartial(int x, int y, int w, int l);
     void DisplayFrame(const unsigned char* frame_buffer_black, const unsigned char* frame_buffer_red);
-    void DisplayFrame(void);
-    void ClearFrame(void);
+    void DisplayArea(const unsigned char* frame_buffer_black, const unsigned char* frame_buffer_red, int x0, int y0, int width, int length);
     void Sleep(void);
 
 private:
-    unsigned int reset_pin;
-    unsigned int dc_pin;
-    unsigned int cs_pin;
-    unsigned int busy_pin;
+    gpio_num_t reset_pin;
+    gpio_num_t dc_pin;
+    gpio_num_t cs_pin;
+    gpio_num_t busy_pin;
 };
 
 #endif /* EPD2IN7B_H */
-
-/* END OF FILE */

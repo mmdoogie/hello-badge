@@ -28,20 +28,23 @@
 #ifndef EPDIF_H
 #define EPDIF_H
 
-#include <Arduino.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "esp_system.h"
+#include "driver/spi_master.h"
+#include "soc/gpio_struct.h"
+#include "driver/gpio.h"
 
-// Pin definition for ESP8266 (e.g. NodeMCU)
-// Connect display CLK signal to GPIO 14 (Node MCU pin D5)
-// Connect display DIN signal to GPIO 13 (Node MCU pin D7)
-// Connect display 3.3V to NodeMCU 3V3
-// Connect display GND to NodeMCU GND
-// Connect other pins as follows:
-//      Display       GPIO   NodeMCU pin
-#define BUSY_PIN        5 // D1
-#define RST_PIN         4 // D2
-#define DC_PIN          0 // D3
-#define CS_PIN          2 // D4
-
+// Pin definition
+#define MOSI_PIN        GPIO_NUM_27
+#define CLK_PIN         GPIO_NUM_26
+#define CS_PIN          GPIO_NUM_25
+#define DC_PIN          GPIO_NUM_33
+#define RST_PIN         GPIO_NUM_32
+#define BUSY_PIN        GPIO_NUM_35
 
 class EpdIf {
 public:
@@ -49,8 +52,8 @@ public:
     ~EpdIf(void);
 
     static int  IfInit(void);
-    static void DigitalWrite(int pin, int value); 
-    static int  DigitalRead(int pin);
+    static void DigitalWrite(gpio_num_t pin, int value); 
+    static int  DigitalRead(gpio_num_t pin);
     static void DelayMs(unsigned int delaytime);
     static void SpiTransfer(unsigned char data);
 };

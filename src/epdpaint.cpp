@@ -24,11 +24,11 @@
  * THE SOFTWARE.
  */
 
-#include <pgmspace.h>
 #include "epdpaint.h"
 
 Paint::Paint(unsigned char* image, int width, int height) {
     this->rotate = ROTATE_0;
+    this->invert = INVERT;
     this->image = image;
     /* 1 byte = 8 pixels, so the width should be the multiple of 8 */
     this->width = width % 8 ? width + 8 - (width % 8) : width;
@@ -57,7 +57,7 @@ void Paint::DrawAbsolutePixel(int x, int y, int colored) {
     if (x < 0 || x >= this->width || y < 0 || y >= this->height) {
         return;
     }
-    if (IF_INVERT_COLOR) {
+    if (this->invert) {
         if (colored) {
             image[(x + y * this->width) / 8] |= 0x80 >> (x % 8);
         } else {
@@ -99,8 +99,16 @@ int Paint::GetRotate(void) {
     return this->rotate;
 }
 
-void Paint::SetRotate(int rotate){
+void Paint::SetRotate(int rotate) {
     this->rotate = rotate;
+}
+
+int Paint::GetInvert(void) {
+    return this->invert;
+}
+
+void Paint::SetInvert(int invert) {
+    this->invert = invert;
 }
 
 /**
@@ -142,21 +150,21 @@ void Paint::DrawPixel(int x, int y, int colored) {
 /**
  *  @brief: this draws a charactor on the frame buffer but not refresh
  */
-void Paint::DrawCharAt(int x, int y, char ascii_char, sFONT* font, int colored) {
+void Paint::DrawCharAt(int x, int y, char ascii_char, MonoBitFont* font, int colored) {
     int i, j;
-    unsigned int char_offset = (ascii_char - ' ') * font->Height * (font->Width / 8 + (font->Width % 8 ? 1 : 0));
-    const unsigned char* ptr = &font->table[char_offset];
 
-    for (j = 0; j < font->Height; j++) {
-        for (i = 0; i < font->Width; i++) {
-            if (pgm_read_byte(ptr) & (0x80 >> (i % 8))) {
+    uint8_t *ptr = font->getCharData(ascii_char);
+
+    for (j = 0; j < font->getCharHeight(); j++) {
+        for (i = 0; i < font->getCharWidth(ascii_char); i++) {
+            if (*ptr & (0x80 >> (i % 8))) {
                 DrawPixel(x + i, y + j, colored);
             }
             if (i % 8 == 7) {
                 ptr++;
             }
         }
-        if (font->Width % 8 != 0) {
+        if (font->getCharWidth(ascii_char) % 8 != 0) {
             ptr++;
         }
     }
@@ -165,7 +173,7 @@ void Paint::DrawCharAt(int x, int y, char ascii_char, sFONT* font, int colored) 
 /**
 *  @brief: this displays a string on the frame buffer but not refresh
 */
-void Paint::DrawStringAt(int x, int y, const char* text, sFONT* font, int colored) {
+void Paint::DrawStringAt(int x, int y, const char* text, MonoBitFont* font, int colored) {
     const char* p_text = text;
     unsigned int counter = 0;
     int refcolumn = x;
@@ -175,11 +183,25 @@ void Paint::DrawStringAt(int x, int y, const char* text, sFONT* font, int colore
         /* Display one character on EPD */
         DrawCharAt(refcolumn, y, *p_text, font, colored);
         /* Decrement the column position by 16 */
-        refcolumn += font->Width;
+        refcolumn += font->getCharWidth(*p_text) + font->getSpacing();
         /* Point on the next character */
         p_text++;
         counter++;
     }
+}
+
+void Paint::DrawStringCenteredIn(int x, int y, int width, int height, const char* text, MonoBitFont* font, int colored) {
+    int strWidth = font->getStringWidth(text);
+    int strHeight = font->getCharHeight();
+
+    DrawStringAt(x + (width - strWidth) / 2, y + (height - strHeight) / 2, text, font, colored);
+}
+
+void Paint::DrawStringCenteredAt(int x, int y, const char* text, MonoBitFont* font, int colored) {
+    int strWidth = font->getStringWidth(text);
+    int strHeight = font->getCharHeight();
+
+    DrawStringAt(x - strWidth / 2, y - strHeight / 2, text, font, colored);
 }
 
 /**
@@ -258,6 +280,22 @@ void Paint::DrawFilledRectangle(int x0, int y0, int x1, int y1, int colored) {
     }
 }
 
+void Paint::DrawFilledRoundedRectangle(int x0, int y0, int x1, int y1, int radius, int colored) {
+    int min_x, min_y, max_x, max_y;
+    min_x = x1 > x0 ? x0 : x1;
+    max_x = x1 > x0 ? x1 : x0;
+    min_y = y1 > y0 ? y0 : y1;
+    max_y = y1 > y0 ? y1 : y0;
+    
+    DrawFilledCircle(min_x + radius, min_y + radius, radius, colored);
+    DrawFilledCircle(min_x + radius, max_y - radius, radius, colored);
+    DrawFilledCircle(max_x - radius, min_y + radius, radius, colored);
+    DrawFilledCircle(max_x - radius, max_y - radius, radius, colored);
+    DrawFilledRectangle(min_x + radius, min_y, max_x - radius, max_y, colored);
+    DrawFilledRectangle(min_x, min_y + radius, min_x + radius, max_y - radius, colored);
+    DrawFilledRectangle(max_x - radius, min_y + radius, max_x, max_y - radius, colored);
+}
+
 /**
 *  @brief: this draws a circle
 */
@@ -316,27 +354,15 @@ void Paint::DrawFilledCircle(int x, int y, int radius, int colored) {
     } while(x_pos <= 0);
 }
 
+void Paint::BitBlt(int x, int y, int width, int height, unsigned char* img) {
+    int rowSize = (width / 8) + ((width % 8) ? 1 : 0);
+
+    for (int dy = 0; dy < height; dy++) {
+        for (int dx = 0; dx < width; dx++) {
+            unsigned char b = img[rowSize * dy + (dx/8)];
+            DrawPixel(x+dx, y+dy, (b & (1<<(7-dx))) ? 1 : 0);
+        }
+    }
+}
+
 /* END OF FILE */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
