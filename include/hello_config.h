@@ -15,8 +15,8 @@
 #define SPI_CS_EPD		GPIO_NUM_21
 #define EPD_DC			GPIO_NUM_14
 #define EPD_RST			GPIO_NUM_33
-#define EPD_BUSY		GPIO_NUM_27
-#define EPD_ENA			GPIO_NUM_13
+#define EPD_BUSY		GPIO_NUM_13
+#define EPD_ENA			GPIO_NUM_27
 
 // Chip Selects for SRAM and SD
 #define SPI_CS_SRAM		GPIO_NUM_32
