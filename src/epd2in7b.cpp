@@ -27,6 +27,9 @@
 #include <stdlib.h>
 #include "epd2in7b.h"
 
+#include "esp_log.h"
+#define LOGTAG "epd2in7b"
+
 Epd::~Epd() {
 };
 
@@ -40,11 +43,14 @@ int Epd::SpiInit(SPIBus* bus) {
 }
 
 void Epd::DispInit(void) {
+    ESP_LOGI(LOGTAG, "Init Start");
     Reset();
 
+    ESP_LOGI(LOGTAG, "Power On");
     SendCommand(POWER_ON);
     WaitUntilIdle();
 
+    ESP_LOGI(LOGTAG, "Setting Registers");
     SendCommand(PANEL_SETTING);
     SendData(0xAF);
 
@@ -85,13 +91,17 @@ void Epd::DispInit(void) {
     SendCommand(VCOM_AND_DATA_INTERVAL_SETTING);
     SendData(0xC7);
 
+    ESP_LOGI(LOGTAG, "Setting LUTs");
     SetLut();
 
+    ESP_LOGI(LOGTAG, "Setting Resolution");
     SendCommand(TCON_RESOLUTION);
     SendData(0x00);
     SendData(0xB0); // 0x00B0 = 176
     SendData(0x01);
     SendData(0x08); // 0x0108 = 264
+
+    ESP_LOGI(LOGTAG, "Init Complete");
 }
 
 /**
@@ -115,7 +125,7 @@ void Epd::SendData(unsigned char data) {
  */
 void Epd::WaitUntilIdle(void) {
     while(DigitalRead(EPD_BUSY) == 0) {      //0: busy, 1: idle
-        DelayMs(100);
+        DelayMs(10);
     }      
 }
 
@@ -125,13 +135,15 @@ void Epd::WaitUntilIdle(void) {
  *          see EPD::Sleep();
  */
 void Epd::Reset(void) {
+    ESP_LOGI(LOGTAG, "Resetting Display");
     DigitalWrite(EPD_ENA, 1);
     DigitalWrite(EPD_RST, 1);
     DelayMs(200);
-    DigitalWrite(EPD_RST, 0);                //module reset    
+    DigitalWrite(EPD_RST, 0);
     DelayMs(20);
     DigitalWrite(EPD_RST, 1);
-    DelayMs(200);    
+    DelayMs(200);
+    ESP_LOGI(LOGTAG, "Reset Complete");
 }
 
 /**
@@ -162,6 +174,8 @@ void Epd::SetLut(void) {
 }
 
 void Epd::DisplayFrame(const unsigned char* frame_buffer_black, const unsigned char* frame_buffer_red) {
+    ESP_LOGI(LOGTAG, "Full Screen Refresh");
+    ESP_LOGI(LOGTAG, "Transmitting Black Buffer");
     if (frame_buffer_black != NULL) {
         SendCommand(DATA_START_TRANSMISSION_1);
         DelayMs(2);
@@ -171,6 +185,8 @@ void Epd::DisplayFrame(const unsigned char* frame_buffer_black, const unsigned c
         DelayMs(2);
         SendCommand(DATA_STOP);
     }
+
+    ESP_LOGI(LOGTAG, "Transmitting Red Buffer");
     if (frame_buffer_red != NULL) {
         SendCommand(DATA_START_TRANSMISSION_2);
         DelayMs(2);
@@ -180,11 +196,16 @@ void Epd::DisplayFrame(const unsigned char* frame_buffer_black, const unsigned c
         DelayMs(2);
         SendCommand(DATA_STOP);
     }
+
+    ESP_LOGI(LOGTAG, "Starting Refresh");
     SendCommand(DISPLAY_REFRESH);
     WaitUntilIdle();
+    ESP_LOGI(LOGTAG, "Refresh Complete");
 }
 
 void Epd::DisplayArea(const unsigned char* frame_buffer_black, const unsigned char* frame_buffer_red, int x0, int y0, int width, int length) {
+    ESP_LOGI(LOGTAG, "Partial Refresh");
+    ESP_LOGI(LOGTAG, "Sending Black Buffer");
     if (frame_buffer_black != NULL) {
         SendCommand(DATA_START_TRANSMISSION_1);
         DelayMs(2);
@@ -195,6 +216,7 @@ void Epd::DisplayArea(const unsigned char* frame_buffer_black, const unsigned ch
         SendCommand(DATA_STOP);
     }
 
+    ESP_LOGI(LOGTAG, "Sending Red Buffer");
     if (frame_buffer_red != NULL) {
         SendCommand(DATA_START_TRANSMISSION_2);
         DelayMs(2);
@@ -208,6 +230,7 @@ void Epd::DisplayArea(const unsigned char* frame_buffer_black, const unsigned ch
     if (x0 % 8) x0 -= (x0 % 8);
     if (width % 8) width += 8 - (width % 8);
     
+    ESP_LOGI(LOGTAG, "Starting Partial Refesh");
     SendCommand(DISPLAY_PARTIAL_REFRESH);
     SendData((x0 & 0x100) >> 8);
     SendData(x0 & 0xF8);
@@ -218,6 +241,7 @@ void Epd::DisplayArea(const unsigned char* frame_buffer_black, const unsigned ch
     SendData((length & 0x100) >> 8);
     SendData(length & 0xFF);
     WaitUntilIdle();
+    ESP_LOGI(LOGTAG, "Refresh Complete");
 }
 
 /**
@@ -229,6 +253,7 @@ void Epd::DisplayArea(const unsigned char* frame_buffer_black, const unsigned ch
  *          You can use Epd::Init() to awaken
  */
 void Epd::Sleep() {
+    ESP_LOGI(LOGTAG, "Entering Sleep Mode");
     SendCommand(VCOM_AND_DATA_INTERVAL_SETTING);
     SendData(0xF7);
     SendCommand(POWER_OFF);
@@ -236,6 +261,7 @@ void Epd::Sleep() {
     SendData(0xA5);
     DelayMs(20);
     DigitalWrite(EPD_ENA, 0);
+    ESP_LOGI(LOGTAG, "Display Disabled");
 }
 
 const unsigned char lut_vcom[] =
