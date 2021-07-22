@@ -22,7 +22,7 @@ With no special precautions beyond sleeping and polling for button presses every
 
 ## Wiring Diagram
 
-![Wiring Diagram]()
+![Wiring Diagram](doc/wiring.png)
 
 The wiring diagram here represents the pins connected as they are currently laid out in the code.  Other pinouts are possible with adjustments.
 
