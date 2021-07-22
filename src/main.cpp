@@ -1,6 +1,8 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
+#include "esp_sleep.h"
+
 #include "buttonshim.h"
 #include "spibus.h"
 #include "epd2in7b.h"
@@ -54,10 +56,11 @@ void app_main() {
 		ESP_LOGI(LOGTAG, "Reading Buttons");
 		uint8_t b = 0;
 		while (b == 0) {
+			esp_sleep_enable_timer_wakeup(500000);
+			esp_light_sleep_start();
+			ESP_LOGI(LOGTAG, "Wakeup: %d", esp_sleep_get_wakeup_cause());
 			b = btn->getState();
 			ESP_LOGE("Buttons", "%02X", b);
-			
-			vTaskDelay(500 / portTICK_RATE_MS);
 		}
 
 		ESP_LOGI(LOGTAG, "Clearing Paints");
