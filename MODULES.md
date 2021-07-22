@@ -20,3 +20,8 @@ All typefaces here are originally available via Google Fonts under the SIL Open 
 * [Dancing Script](https://fonts.google.com/specimen/Dancing+Script) by Impallari Type
 * [Nova Flat](https://fonts.google.com/specimen/Nova+Flat) by Wojciech Kalinowski
 * [Nunito](https://fonts.google.com/specimen/Nunito) by Vernon Adams and Cyreal
+
+## QR Code Library
+QR Code generation library from [GitHub - ricmoo/QRCode](https://github.com/ricmoo/QRCode)
+
+MIT License maintained in the source of those included files.
