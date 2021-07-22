@@ -15,8 +15,9 @@ uint8_t* imgBlack;
 uint8_t* imgRed;
 Paint* paintBlack;
 Paint* paintRed;
-#define COLOR 1
-#define BLANK 0
+
+#include "screens/hellotag.h"
+#include "screens/qrtag.h"
 
 extern "C" {
 
@@ -30,7 +31,7 @@ void app_main() {
 	ESP_LOGI(LOGTAG, "Epd Init");
 	Epd* epd = new Epd();
 	epd->SpiInit(spi);
-	epd->DispInit();
+	epd->Sleep();
 
 	ESP_LOGI(LOGTAG, "Alloc Buffs");
 	imgBlack = (uint8_t*)malloc(EPD_WIDTH * EPD_HEIGHT / 8);
@@ -45,44 +46,41 @@ void app_main() {
 	paintRed->SetRotate(Paint::ROTATE_270);
 	paintRed->SetInvert(true);
 
-	ESP_LOGI(LOGTAG, "Reading Buttons");
-	uint8_t b = 0;
-	while (b != 1) {
-		b = btn->getState();
-		ESP_LOGE("Buttons", "%02X", b);
-		vTaskDelay(500 / portTICK_RATE_MS);
+	Screen* s1 = new HelloTag(paintBlack, paintRed, "hello", "MY NAME IS", "Doogie");
+	Screen* s2 = new HelloTag(paintBlack, paintRed, "saluton", "MIA NOMO ESTAS", "Mateo");
+	Screen* s3 = new QrTag(paintBlack, paintRed, "Proj. Details", "https://github.com/mmdoogie/hello-badge", "GitHub: mmdoogie/hello-badge");
+
+	while (1) {
+		ESP_LOGI(LOGTAG, "Reading Buttons");
+		uint8_t b = 0;
+		while (b == 0) {
+			b = btn->getState();
+			ESP_LOGE("Buttons", "%02X", b);
+			
+			vTaskDelay(500 / portTICK_RATE_MS);
+		}
+
+		ESP_LOGI(LOGTAG, "Clearing Paints");
+		paintBlack->Clear(0);
+		paintRed->Clear(0);
+
+		switch (b) {
+			case ButtonShim::BUTTON_A:
+				s1->render();
+				break;
+			case ButtonShim::BUTTON_B:
+				s2->render();
+				break;
+			case ButtonShim::BUTTON_C:
+				s3->render();
+				break;
+		}
+
+		ESP_LOGI(LOGTAG, "Request Display");
+		epd->DispInit();
+		epd->DisplayFrame(imgBlack, imgRed);
+		epd->Sleep();
 	}
-
-	ESP_LOGI(LOGTAG, "Button Pressed");
-	ESP_LOGI(LOGTAG, "Clearing Paints");
-	paintBlack->Clear(BLANK);
-	paintRed->Clear(BLANK);
-
-	ESP_LOGI(LOGTAG, "Drawing");
-	paintBlack->DrawFilledRectangle(10, 10, 50, 50, COLOR);
-	paintRed->DrawFilledCircle(50, 50, 20, COLOR);
-	paintRed->DrawFilledRectangle(10, 10, 50, 50, BLANK);
-
-	ESP_LOGI(LOGTAG, "Start Refresh");
-	epd->DisplayFrame(imgBlack, imgRed);
-
-	ESP_LOGI(LOGTAG, "Reading Buttons");
-	b = 0;
-	while (b != 1) {
-		b = btn->getState();
-		ESP_LOGE("Buttons", "%02X", b);
-		vTaskDelay(500 / portTICK_RATE_MS);
-	}
-
-	ESP_LOGI(LOGTAG, "Adding to Paints");
-	paintBlack->DrawFilledCircle(100, 100, 25, COLOR);
-	paintRed->DrawFilledCircle(150, 100, 25, COLOR);
-
-	ESP_LOGI(LOGTAG, "Partial Refresh");
-	Paint::point_t pt1, pt2;
-	pt1 = paintBlack->GetAbsoluteLocation(75, 75);
-	pt2 = paintBlack->GetAbsoluteLocation(75+100, 75+50);
-	epd->DisplayArea(imgBlack, imgRed, pt1.x, pt2.y, pt2.x-pt1.x, pt1.y-pt2.y);
 }
 
 }
