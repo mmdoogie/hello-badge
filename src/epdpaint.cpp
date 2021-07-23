@@ -388,13 +388,13 @@ void Paint::DrawFilledCircle(int x, int y, int radius, int colored) {
     } while(x_pos <= 0);
 }
 
-void Paint::BitBlt(int x, int y, int width, int height, unsigned char* img) {
+void Paint::BitBlt(int x, int y, int width, int height, const uint8_t* img) {
     int rowSize = (width / 8) + ((width % 8) ? 1 : 0);
 
     for (int dy = 0; dy < height; dy++) {
         for (int dx = 0; dx < width; dx++) {
             unsigned char b = img[rowSize * dy + (dx/8)];
-            DrawPixel(x+dx, y+dy, (b & (1<<(7-dx))) ? 1 : 0);
+            DrawPixel(x+dx, y+dy, (b & (1<<(7-(dx%8)))) ? 1 : 0);
         }
     }
 }

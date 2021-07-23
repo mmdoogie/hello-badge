@@ -57,7 +57,7 @@ public:
     void DrawFilledRoundedRectangle(int x0, int y0, int x1, int y1, int radius, int colored);
     void DrawCircle(int x, int y, int radius, int colored);
     void DrawFilledCircle(int x, int y, int radius, int colored);
-    void BitBlt(int x, int y, int width, int height, unsigned char* img);
+    void BitBlt(int x, int y, int width, int height, const uint8_t* img);
 
     static const int ROTATE_0 = 0;
     static const int ROTATE_90 = 1;
