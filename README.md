@@ -1,5 +1,7 @@
 # Hello My Name Is ePaper Badge
 
+![Demo](doc/demo.gif)
+
 ## Parts List
 The intention was to not need a custom PCB for this project.  While it could surely be consolidated and simplified, the building block nature makes it easier to see how the components interact and can be easily expanded or reused.
 
