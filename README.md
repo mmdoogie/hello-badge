@@ -24,22 +24,37 @@ With no special precautions beyond sleeping and polling for button presses every
 
 The slide switch and magnetic badge holder are generic parts that can be swapped for whatever.  For the case as designed, the switch needs a 15mm mounting hole spacing and the body is 10 x 5 x 5mm.  The badge holder base plate is approximately 45 x 13mm and the case recess is just to make alignment easy.
 
-## Wiring Diagram
+## Case
+
+A case suitable for 3D Printing is available in the [stl](stl) folder.  Editable STEP files are also provided.
+
+The case consists of two parts:
+
+#### Front Case
+
+![Front Case](doc/front-case.png)
+
+The front case is designed to hold all of the components.  The plastic pin patterns are intentionally slightly larger than the component hole spacings to allow for a slight amount of tension during test fitting.  Once everything is tested out, the extra protruding length can be melted with a soldering iron to "heat stake" the parts to prevent vibration.
+
+#### Back Case
+
+![Back Case](doc/back-case.png)
+
+The back case is designed to snap securely into the front case.  It features a recess for the badge holder base plate and print-in-place compliant button mechanisms.  This is designed with ~0.4mm nozzles (0.4-0.5 line width) and 0.2mm layer heights in mind, but will probably work beyond that range some.  Likewise, a material that can take some elongation before failure, such as PETG, will be more readily successful.
+
+![Button Detail](doc/compliant-button.png)
+
+A detailed view of the compliant button shows how it was designed with a thin, long element supporting the button to prevent rotation and removal, but allowing enough flex to click the microswitches beneath.
+
+## Assembly
+
+#### Wiring Diagram
 
 ![Wiring Diagram](doc/wiring.png)
 
-The wiring diagram here represents the pins connected as they are currently laid out in the code.  Other pinouts are possible with adjustments.
+The wiring diagram here represents the pins connected as they are currently laid out in the code.  Other pinouts are possible with adjustments.  Wiring was done with two short lengths of ribbon cable (hence the sequential colors), keeping in mind the intended final layout shown below.
 
-## Case
-
-A case suitable for 3D Printing is available in the [stl](stl) folder.  Editable STEP files are also provided.  It consists of two parts: a front case that all of the components mount to, and a back case that snaps in place.  Printing the back case scaled at 99% may help if it bows or is too tight to slide together without breaking the tabs.
+#### Component Layout
 
 ![Populated Case](doc/populated-case.png)
-Populated Case Example
-
-![Front Case](doc/front-case.png)
-Front Case
-
-![Back Case](doc/back-case.png)
-Back Case
 
