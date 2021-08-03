@@ -26,6 +26,7 @@ Paint* paintRed;
 #include "esp_event.h"
 #include "esp_system.h"
 #include "esp_http_server.h"
+#include "esp_spiffs.h"
 
 TaskHandle_t mth;
 
@@ -137,6 +138,29 @@ static esp_err_t upload_post_handler(httpd_req_t *req) {
     httpd_resp_set_status(req, HTTPD_200);
     httpd_resp_send(req, 0, 0);
 
+	if (dest != 'A') {
+		char fn[18] = "/spiffs/slotX.img";
+		fn[12] = dest;
+		ESP_LOGI(LOGTAG, "Writing to %s", fn);
+		FILE* f = fopen(fn, "wb");
+		if (f == NULL) {
+			ESP_LOGE(LOGTAG, "Error opening for write.");
+			return ESP_FAIL;
+		}
+		int tx = fwrite(imgBlack, 1, 5808, f);
+		if (tx != 5808) {
+			ESP_LOGE(LOGTAG, "Short write black %d", tx);
+			return ESP_FAIL;
+		}
+		tx = fwrite(imgRed, 1, 5808, f);
+		if (tx != 5808) {
+			ESP_LOGE(LOGTAG, "Short write red %d", tx);
+			return ESP_FAIL;
+		}
+		fclose(f);
+		ESP_LOGI(LOGTAG, "Successfully written.");
+	}
+
 	xTaskNotify(mth, 0, eNoAction);
 
     return ESP_OK;
@@ -213,6 +237,25 @@ void app_main() {
 	b = btn->getState();
 	if (b != 0) {
 		ESP_LOGI(LOGTAG, "Button pressed at startup!");
+		esp_vfs_spiffs_conf_t conf = {
+			.base_path = "/spiffs",
+			.partition_label = NULL,
+			.max_files = 4,
+			.format_if_mount_failed = true
+		};
+		esp_err_t ret = esp_vfs_spiffs_register(&conf);
+		if (ret != ESP_OK) {
+			if (ret == ESP_FAIL) {
+				ESP_LOGE(LOGTAG, "Failed to mount or format filesystem");
+			} else if (ret == ESP_ERR_NOT_FOUND) {
+				ESP_LOGE(LOGTAG, "Failed to find SPIFFS partition");
+			} else {
+				ESP_LOGE(LOGTAG, "Failed to initialize SPIFFS (%s)", esp_err_to_name(ret));
+			}
+			return;		
+		} else {
+			ESP_LOGI(LOGTAG, "SPIFFS ok");
+		}
 		if (b == ButtonShim::BUTTON_A) {
 			ESP_LOGI(LOGTAG, "Starting WiFi!");
 			wifi_init_softap();
@@ -226,28 +269,77 @@ void app_main() {
 				epd->DisplayFrame(imgBlack, imgRed);
 				epd->Sleep();
 			}
+		} else {
+			const char* fn;
+			switch (b) {
+				default:
+				case ButtonShim::BUTTON_B:
+					fn = "/spiffs/slotB.img";
+					break;
+				case ButtonShim::BUTTON_C:
+					fn = "/spiffs/slotC.img";
+					break;
+				case ButtonShim::BUTTON_D:
+					fn = "/spiffs/slotD.img";
+					break;
+				case ButtonShim::BUTTON_E:
+					fn = "/spiffs/slotE.img";
+					break;
+			}
+			ESP_LOGI(LOGTAG, "Displaying %s", fn);
+			FILE* f = fopen(fn, "rb");
+			if (f == NULL) {
+				ESP_LOGE(LOGTAG, "Failed to open");
+				return;
+			}
+			int rx = fread(imgBlack, 1, 5808, f);
+			if (rx != 5808) {
+				ESP_LOGE(LOGTAG, "File short black %d", rx);
+			}
+			rx = fread(imgRed, 1, 5808, f);
+			if (rx != 5808) {
+				ESP_LOGE(LOGTAG, "File short red %d", rx);
+			}
+			fclose(f);
+			ESP_LOGI(LOGTAG, "File Read - Request Display");
+			epd->DispInit();
+			epd->DisplayFrame(imgBlack, imgRed);
+			epd->Sleep();
 		}
+	} else {
+		ESP_LOGI(LOGTAG, "No button pressed at startup, normal mode!");
+		while (1) {
+			ESP_LOGI(LOGTAG, "Reading Buttons");
+			uint8_t b = 0;
+			while (b == 0) {
+				esp_sleep_enable_timer_wakeup(500000);
+				esp_light_sleep_start();
+				ESP_LOGI(LOGTAG, "Wakeup: %d", esp_sleep_get_wakeup_cause());
+				b = btn->getState();
+				ESP_LOGE("Buttons", "%02X", b);
+			}
 
-		ESP_LOGI(LOGTAG, "Clearing Paints");
-		paintBlack->Clear(0);
-		paintRed->Clear(0);
+			ESP_LOGI(LOGTAG, "Clearing Paints");
+			paintBlack->Clear(0);
+			paintRed->Clear(0);
 
-		switch (b) {
-			case ButtonShim::BUTTON_A:
-				s1->render();
-				break;
-			case ButtonShim::BUTTON_B:
-				s2->render();
-				break;
-			case ButtonShim::BUTTON_C:
-				s3->render();
-				break;
+			switch (b) {
+				case ButtonShim::BUTTON_A:
+					s1->render();
+					break;
+				case ButtonShim::BUTTON_B:
+					s2->render();
+					break;
+				case ButtonShim::BUTTON_C:
+					s3->render();
+					break;
+			}
+
+			ESP_LOGI(LOGTAG, "Request Display");
+			epd->DispInit();
+			epd->DisplayFrame(imgBlack, imgRed);
+			epd->Sleep();
 		}
-
-		ESP_LOGI(LOGTAG, "Request Display");
-		epd->DispInit();
-		epd->DisplayFrame(imgBlack, imgRed);
-		epd->Sleep();
 	}
 }
 
