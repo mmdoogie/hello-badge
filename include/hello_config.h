@@ -22,4 +22,8 @@
 #define SPI_CS_SRAM		GPIO_NUM_32
 #define SPI_CS_SD		GPIO_NUM_15
 
+// Info for WiFi mode
+#define WIFI_SOFTAP_SSID "HelloBadge"
+#define WIFI_SOFTAP_PSK  "t0mat03s"
+
 #endif
