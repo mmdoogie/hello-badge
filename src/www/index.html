@@ -1,0 +1,256 @@
+<html>
+<head>
+
+<style>
+div#source canvas {
+  background-color: #005500;
+  width: 264px;
+  height: 176px;
+}
+
+div#dest canvas {
+  background-color: #550000;
+  width: 264px;
+  height: 176px;
+}
+</style>
+
+<script>
+let srcImage = null;
+let bwData = null;
+let rwData = null;
+
+function refreshSourceImage() {
+	if (!srcImage) return;
+	
+	const canvas = document.querySelector("div#source canvas");
+	const img = new Image();
+	img.addEventListener("load", () => {
+		const context = canvas.getContext("2d");
+		canvas.width = 264;
+		canvas.height = 176;
+		const width = img.width;
+		const height = img.height;
+		const bg = document.querySelector('input[name="bgcolor"]:checked').value;
+		context.fillStyle = bg;
+		context.fillRect(0, 0, canvas.width, canvas.height);
+		
+		const mode = document.querySelector('input[name="scaling"]:checked').value;
+		if (mode == "stretch") {
+			context.drawImage(img, 0, 0, width, height, 0, 0, canvas.width, canvas.height);
+		} else {
+			const scaleW = width * canvas.height / height;
+			if (scaleW <= canvas.width) {
+				const xPad = (canvas.width - scaleW) / 2;
+				context.drawImage(img, 0, 0, width, height, xPad, 0, scaleW, canvas.height);
+			} else {
+				const scaleH = height * canvas.width / width;
+				const yPad = (canvas.height - scaleH) / 2;
+				context.drawImage(img, 0, 0, width, height, 0, yPad, canvas.width, scaleH);
+			}
+		}
+		
+		doImageProcessing();
+	});
+	img.setAttribute("src", srcImage);
+}
+
+function handleNewFile(f) {
+	if (f && f[0]) {
+		const fileReader = new FileReader();
+		fileReader.addEventListener("load", () => {
+			srcImage = fileReader.result;
+			refreshSourceImage();
+		});
+		fileReader.readAsDataURL(f[0]);
+	}
+}
+
+function paintDataToCanvas(dat, canvas) {
+	const context = canvas.getContext("2d");
+	context.clearRect(0, 0, canvas.width, canvas.height);
+	context.putImageData(dat, 0, 0);
+}
+
+function doImageProcessing() {
+	const blackGV = document.querySelector("input#blackGV").value;
+	const whiteGV = document.querySelector("input#whiteGV").value;
+	document.querySelector("span#blackGVText").innerText = blackGV;
+	document.querySelector("span#whiteGVText").innerText = whiteGV;
+	
+	if (!srcImage) return;
+	
+	const srcCanvas = document.querySelector("div#source canvas");
+	const context = srcCanvas.getContext("2d");
+	const imageData = context.getImageData(0, 0, srcCanvas.width, srcCanvas.height);
+	
+	const d = imageData.data;
+	
+	const bwImageData = context.createImageData(imageData);
+	bwData = bwImageData.data;
+	const rwImageData = context.createImageData(imageData);
+	rwData = rwImageData.data;
+	const brwImageData = context.createImageData(imageData);
+	const brwData = brwImageData.data;
+	
+	for (let i = 0; i < d.length; i+= 4) {
+		const chan = document.querySelector('input[name="channel"]:checked').value;
+		let gsv = 0;
+		if (chan == "gray") {
+			gsv = d[i]*0.299+d[i+1]*0.587+d[i+2]*0.114;
+		} else if (chan == "red") {
+			gsv = d[i];
+		} else if (chan == "green") {
+			gsv = d[i+1];
+		} else {
+			gsv = d[i+2];
+		}
+		
+		if (document.querySelector("input#invert").checked) gsv = 255-gsv;
+		if (gsv < blackGV) {
+			bwData[i] = 0;
+			bwData[i+1] = 0;
+			bwData[i+2] = 0;
+			bwData[i+3] = 255;
+			rwData[i] = 255;
+			rwData[i+1] = 255;
+			rwData[i+2] = 255;
+			rwData[i+3] = 255;
+			brwData[i] = 0;
+			brwData[i+1] = 0;
+			brwData[i+2] = 0;
+			brwData[i+3] = 255;
+		} else if (gsv > whiteGV) {
+			bwData[i] = 255;
+			bwData[i+1] = 255;
+			bwData[i+2] = 255;
+			bwData[i+3] = 255;
+			rwData[i] = 255;
+			rwData[i+1] = 255;
+			rwData[i+2] = 255;
+			rwData[i+3] = 255;
+			brwData[i] = 255;
+			brwData[i+1] = 255;
+			brwData[i+2] = 255;
+			brwData[i+3] = 255;
+		} else {
+			bwData[i] = 255;
+			bwData[i+1] = 255;
+			bwData[i+2] = 255;
+			bwData[i+3] = 255;
+			rwData[i] = 255;
+			rwData[i+1] = 0;
+			rwData[i+2] = 0;
+			rwData[i+3] = 255;
+			brwData[i] = 255;
+			brwData[i+1] = 0;
+			brwData[i+2] = 0;
+			brwData[i+3] = 255;
+		}
+	}
+	
+	const d1Canv = document.querySelector("div#dest canvas#bw");
+	const d2Canv = document.querySelector("div#dest canvas#rw");
+	const d3Canv = document.querySelector("div#dest canvas#preview");
+	
+	d1Canv.width = 264;
+	d2Canv.width = 264;
+	d3Canv.width = 264;
+	d1Canv.height = 176;
+	d2Canv.height = 176;
+	d3Canv.height = 176;
+	
+	paintDataToCanvas(bwImageData, d1Canv);
+	paintDataToCanvas(rwImageData, d2Canv);
+	paintDataToCanvas(brwImageData, d3Canv);
+}
+
+function compressData() {
+	const out = new Uint8Array(5808*2);
+	let j = 0;
+	let v = 0;
+	
+	for (let x = 263; x >= 0; x--) {
+		for (let y = 0; y < 176; y++) {
+			v = v * 2;
+			if (bwData[(264*y+x)*4+1] != 0) v = v + 1;
+			if (y % 8 == 7) {
+				out[j] = v;
+				j += 1;
+				v = 0;
+			}
+		}
+	}
+		
+	v = 0;
+	for (let x = 263; x >= 0; x--) {
+		for (let y = 0; y < 176; y++) {
+			v = v * 2;
+			if (rwData[(264*y+x)*4+1] == 0) v = v + 1;
+			if (y % 8 == 7) {
+				out[j] = v;
+				j += 1;
+				v = 0;
+			}
+		}
+	}
+	
+	return out;
+}
+
+function doSubmit() {
+	let xhr = new XMLHttpRequest();
+	const slot = document.querySelector('input[name="imgSlot"]:checked').value;
+	xhr.open('POST', '/submit/' + slot, true);
+	xhr.send(compressData());
+}
+</script>
+
+Scaling:
+<input type="radio" value="stretch" name="scaling" onchange=refreshSourceImage() checked>Stretch</input>
+<input type="radio" value="center" name="scaling" onchange=refreshSourceImage()>Center</input>
+<br/>
+Background:
+<input type="radio" value="black" name="bgcolor" onchange=refreshSourceImage() checked>Black</input>
+<input type="radio" value="white" name="bgcolor" onchange=refreshSourceImage()>White</input>
+<input type="radio" value="red"   name="bgcolor" onchange=refreshSourceImage()>Red</input>
+
+<br/>
+<input type="file" accept="image/png, image/jpeg" onchange=handleNewFile(this.files)></input>
+
+<div id="source">
+  <canvas></canvas>
+</div>
+
+<br/>
+Black: <input type="range" min="0" max="255" value="64" id="blackGV" oninput=doImageProcessing()> <span id="blackGVText">64</span>
+<br/>
+White: <input type="range" min="0" max="255" value="190" id="whiteGV" oninput=doImageProcessing()> <span id="whiteGVText">190</span>
+<br/>
+<input type="checkbox" id="invert" onchange=doImageProcessing()>Invert</input>
+<br/>
+Source:
+<input type="radio" value="gray" name="channel" onchange=doImageProcessing() checked>Grayscale Composite</input>
+<input type="radio" value="red" name="channel" onchange=doImageProcessing()>Red Channel</input>
+<input type="radio" value="green" name="channel" onchange=doImageProcessing()>Green Channel</input>
+<input type="radio" value="blue" name="channel" onchange=doImageProcessing()>Blue Channel</input>
+<br/>
+<br/>
+
+<div id="dest">
+  <canvas id="bw"></canvas>
+  <canvas id="rw"></canvas>
+  <canvas id="preview"></canvas>
+</div>
+
+<br/>
+<input type="radio" value="A" name="imgSlot" checked>Temporary</input>
+<input type="radio" value="B" name="imgSlot">Slot B</input>
+<input type="radio" value="C" name="imgSlot">Slot C</input>
+<input type="radio" value="D" name="imgSlot">Slot D</input>
+<input type="radio" value="E" name="imgSlot">Slot E</input>
+<br/>
+<input type="button" value="Submit" onclick=doSubmit()></input>
+</br/>
+
+</html>
