@@ -22,6 +22,45 @@ static esp_err_t http_get_handler(httpd_req_t *req) {
     return ESP_OK;
 }
 
+static esp_err_t http_get_handler2(httpd_req_t *req) {
+    char dest = req->uri[7];
+	
+	if (dest < 'B' || dest > 'E') {
+		httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid Slot Destination");
+        return ESP_FAIL;
+	}
+
+    char fn[18] = "/spiffs/slotX.img";
+    fn[12] = dest;
+    ESP_LOGI(LOGTAG, "Givvin %s", fn);
+
+    FILE* f = fopen(fn, "rb");
+    if (!f) {
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Problem Opening File");
+        return ESP_FAIL;
+    }
+
+    char hdr[] = "attachment; filename=\"slotX.img\"";
+    hdr[26] = dest;
+
+    httpd_resp_set_status(req, HTTPD_200);
+    httpd_resp_set_type(req, "application/octet-stream");
+    httpd_resp_set_hdr(req, "Content-Disposition", hdr);
+
+    uint8_t buff[_imgSize/8];
+    for (uint8_t i = 0; i < 16; i++) {
+        int rx = fread(&buff[0], 1, _imgSize/8, f);
+        if (rx != _imgSize/8) {
+            ESP_LOGE(LOGTAG, "File short %d", rx);
+        }
+        httpd_resp_send_chunk(req, (const char*)&buff[0], _imgSize/8);
+    }
+    fclose(f);
+
+    httpd_resp_send_chunk(req, 0, 0);
+    return ESP_OK;
+}
+
 static esp_err_t http_post_handler(httpd_req_t *req) {
 	char dest = req->uri[8];
 	
@@ -38,7 +77,7 @@ static esp_err_t http_post_handler(httpd_req_t *req) {
     ESP_LOGI(LOGTAG, "Receiving Slot %c", dest);
 
     int received = 0;
-    int remaining = 5808;
+    int remaining = _imgSize;
 	int retryCount = 0;
 
     while (remaining > 0) {
@@ -130,6 +169,14 @@ esp_err_t start_httpd_server(uint8_t* imgBlack, uint8_t* imgRed, TaskHandle_t ma
 		.user_ctx  = 0
     };
     httpd_register_uri_handler(server, &get_uri_handler);
+
+    httpd_uri_t get_uri_handler2 = {
+        .uri       = "/gimme/*",
+        .method    = HTTP_GET,
+        .handler   = http_get_handler2,
+		.user_ctx  = 0
+    };
+    httpd_register_uri_handler(server, &get_uri_handler2);
 
     httpd_uri_t post_uri_handler = {
         .uri       = "/submit/*",
