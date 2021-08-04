@@ -46,5 +46,5 @@ void wifi_init_softap() {
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
 
-    ESP_LOGI(LOGTAG, "wifi_init_softap finished. SSID:%s password:%s channel:%d", WIFI_SOFTAP_SSID, WIFI_SOFTAP_PSK, 1);
+    ESP_LOGI(LOGTAG, "wifi_init_softap finished. SSID:%s password:%s channel:%d", wifi_config.ap.ssid, WIFI_SOFTAP_PSK, 1);
 }
