@@ -6,6 +6,14 @@
 
 #include "esp_err.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 esp_err_t start_httpd_server(uint8_t* imgBlack, uint8_t* imgRed, TaskHandle_t mainTaskHandle);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
