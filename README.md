@@ -60,6 +60,16 @@ The wiring diagram here represents the pins connected as they are currently laid
 
 ![Populated Case](doc/populated-case.png)
 
+## Dev Environment Setup / Software Installation
+
+This project uses the PlatformIO IDE to handle the installation of toolchains and packages needed to compile the ESP32-targeted code.  PlatformIO IDE is built on top of VSCode so that will be installed first.
+
+1. Follow the instructions from PlatformIO about [VSCode & PlatformIO IDE Installation](https://docs.platformio.org/en/latest/integration/ide/vscode.html#installation).
+2. Download the latest copy of the code here by using the green Code Download button above the file list.  You can download and extract the ZIP file, or if you are used to source control can clone the git repository.
+3. Back in VSCode with PlatformIO IDE installed, click the "alien head" icon on the left sidebar, use the *Open* button under *PIO Home*, then click the *Open Project* button on the tab that opens.  Navigate to whatever folder you extracted the files into and open the project.
+4. PlatformIO should then automatically install the platform files needed to compile the code.  This will take a couple of minutes to download and process.  Eventually in the "alien head" icon, the top section will change to *Project Tasks*.  Click *Build* and make sure the software compiles successfully.  This'll probably take a couple of minutes this first time, as there are a lot of background libraries that only get built once.
+5. Once everything is working, plug in the board with a Micro USB cable, then click the *Upload and Monitor* task button.  This will send the code over to the badge, then start the program.  The monitor window will also appear showing log messages output by the various ESP_LOG lines throughout the code, which let you see what is happening when.  Now that the code is installed and working, the badge can be unplugged and the code will be retained and can now be run from the battery.
+
 ## Operation
 
 The standard mode has up to 5 static pages assigned to the 5 buttons.  Mounted in the case as provided here, the **A** button is the one on the right when looking at the back case, then **B** through **E** proceeding left.  Turn the badge on, then press one of the buttons to display that image.  As written, the badge sleeps and checks for button input periodically, so holding the button for a slight amount of time may be required.
