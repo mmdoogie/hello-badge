@@ -3,6 +3,7 @@
 
 #include "esp_sleep.h"
 #include "esp_event.h"
+#include "driver/adc.h"
 
 #include "buttonshim.h"
 #include "spibus.h"
@@ -29,6 +30,14 @@ extern "C" {
 
 void app_main() {
 	ESP_ERROR_CHECK(esp_event_loop_create_default());
+
+	adc1_config_width(ADC_WIDTH_12Bit);
+	adc1_config_channel_atten(ADC1_CHANNEL_7, ADC_ATTEN_11db);
+
+	int batADC = adc1_get_raw(ADC1_CHANNEL_7);
+	float batV = (float)batADC * 2 * 3.3 / 4096;
+	float batPct = (batV - 3.6) / (4.2 - 3.6) * 100;
+	ESP_LOGW(LOGTAG, "BATTERY VOLTAGE %0.2f ~ %2.0f%%", batV, batPct);
 
 	ESP_LOGI(LOGTAG, "ButtonShim Init");
 	ButtonShim* btn = new ButtonShim(BS_I2C_PORT, BS_SCL, BS_SDA);
