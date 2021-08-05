@@ -60,3 +60,13 @@ The wiring diagram here represents the pins connected as they are currently laid
 
 ![Populated Case](doc/populated-case.png)
 
+## Operation
+
+The standard mode has up to 5 static pages assigned to the 5 buttons.  Mounted in the case as provided here, the **A** button is the one on the right when looking at the back case, then **B** through **E** proceeding left.  Turn the badge on, then press one of the buttons to display that image.  As written, the badge sleeps and checks for button input periodically, so holding the button for a slight amount of time may be required.
+
+A secondary mode has been added that showcases some potential advanced capability.  To use these secondary modes, hold down a button while turning the badge on.  If the **A** button is held down during power on, a WiFi access point mode is started.  Connect to the access point using the following details (or whatever you configured in `include/hello_config.h`):
+* SSID: HelloBadgeXXXX (where XXXX are the last 4 hex digits of the board's MAC address to allow several to coexist)
+* Password: t0mat03s
+* Mode: WPA2 PSK
+
+In this WiFi mode, your device will be assigned the IP Address 192.168.4.2.  Open a web browser and navigate to http://192.168.4.1/ and an interface will appear.  Using this interface, you can upload an image, adjust thresholds, see a preview of the black/white and red/white layers, then send it to the device for display.  At the bottom is a choice of slots **B** through **E**.  Choosing one of these slots will store the final uploaded image to flash for future display.  Access these images by holding down the button corresponding to the slot while turning the power on.
