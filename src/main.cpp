@@ -79,41 +79,51 @@ void app_main() {
 				epd->Sleep();
 			}
 		} else {
-			const char* fn;
-			switch (b) {
-				default:
-				case ButtonShim::BUTTON_B:
-					fn = "/spiffs/slotB.img";
-					break;
-				case ButtonShim::BUTTON_C:
-					fn = "/spiffs/slotC.img";
-					break;
-				case ButtonShim::BUTTON_D:
-					fn = "/spiffs/slotD.img";
-					break;
-				case ButtonShim::BUTTON_E:
-					fn = "/spiffs/slotE.img";
-					break;
+			while (1) {
+				if (b != 0) {
+					const char* fn;
+					switch (b) {
+						default:
+						case ButtonShim::BUTTON_B:
+							fn = "/spiffs/slotB.img";
+							break;
+						case ButtonShim::BUTTON_C:
+							fn = "/spiffs/slotC.img";
+							break;
+						case ButtonShim::BUTTON_D:
+							fn = "/spiffs/slotD.img";
+							break;
+						case ButtonShim::BUTTON_E:
+							fn = "/spiffs/slotE.img";
+							break;
+					}
+					ESP_LOGI(LOGTAG, "Displaying %s", fn);
+					FILE* f = fopen(fn, "rb");
+					if (f == NULL) {
+						ESP_LOGE(LOGTAG, "Failed to open");
+						return;
+					}
+					int rx = fread(imgBlack, 1, 5808, f);
+					if (rx != 5808) {
+						ESP_LOGE(LOGTAG, "File short black %d", rx);
+					}
+					rx = fread(imgRed, 1, 5808, f);
+					if (rx != 5808) {
+						ESP_LOGE(LOGTAG, "File short red %d", rx);
+					}
+					fclose(f);
+					ESP_LOGI(LOGTAG, "File Read - Request Display");
+					epd->DispInit();
+					epd->DisplayFrame(imgBlack, imgRed);
+					epd->Sleep();
+				}
+
+				esp_sleep_enable_timer_wakeup(500000);
+				esp_light_sleep_start();
+				ESP_LOGI(LOGTAG, "Wakeup: %d", esp_sleep_get_wakeup_cause());
+				b = btn->getState();
+				ESP_LOGI("Buttons", "%02X", b);
 			}
-			ESP_LOGI(LOGTAG, "Displaying %s", fn);
-			FILE* f = fopen(fn, "rb");
-			if (f == NULL) {
-				ESP_LOGE(LOGTAG, "Failed to open");
-				return;
-			}
-			int rx = fread(imgBlack, 1, 5808, f);
-			if (rx != 5808) {
-				ESP_LOGE(LOGTAG, "File short black %d", rx);
-			}
-			rx = fread(imgRed, 1, 5808, f);
-			if (rx != 5808) {
-				ESP_LOGE(LOGTAG, "File short red %d", rx);
-			}
-			fclose(f);
-			ESP_LOGI(LOGTAG, "File Read - Request Display");
-			epd->DispInit();
-			epd->DisplayFrame(imgBlack, imgRed);
-			epd->Sleep();
 		}
 	} else {
 		ESP_LOGI(LOGTAG, "No button pressed at startup, normal mode!");
@@ -125,7 +135,7 @@ void app_main() {
 				esp_light_sleep_start();
 				ESP_LOGI(LOGTAG, "Wakeup: %d", esp_sleep_get_wakeup_cause());
 				b = btn->getState();
-				ESP_LOGE("Buttons", "%02X", b);
+				ESP_LOGI("Buttons", "%02X", b);
 			}
 
 			ESP_LOGI(LOGTAG, "Clearing Paints");
