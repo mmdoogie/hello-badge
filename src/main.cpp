@@ -76,8 +76,21 @@ void app_main() {
 		spiffs_init();
 		if (b == ButtonShim::BUTTON_A) {
 			ESP_LOGI(LOGTAG, "Starting WiFi & HTTP Server!");
-			wifi_init_softap();
+			char* finalSSID = wifi_init_softap();
 			start_httpd_server(imgBlack, imgRed, xTaskGetCurrentTaskHandle());
+
+			char qrStr[64];
+			char bottomStr[64];
+			snprintf(qrStr, 64, "WIFI:T:WPA2;S:%s;P:%s;;", finalSSID, WIFI_SOFTAP_PSK);
+			snprintf(bottomStr, 64, "%s / %s", finalSSID, WIFI_SOFTAP_PSK);
+			Screen* sW = new QrTag(paintBlack, paintRed, "WiFi Server", qrStr, bottomStr);
+			paintBlack->Clear(0);
+			paintRed->Clear(0);
+			sW->render();
+			ESP_LOGI(LOGTAG, "Displaying WiFi QR");
+			epd->DispInit();
+			epd->DisplayFrame(imgBlack, imgRed);
+			epd->Sleep();
 			
 			while (1) {
 				ESP_LOGI(LOGTAG, "Main Task NotifyWait");

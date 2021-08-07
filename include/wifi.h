@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-void wifi_init_softap();
+char* wifi_init_softap();
 
 #ifdef __cplusplus
 }

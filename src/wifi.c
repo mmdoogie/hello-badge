@@ -17,7 +17,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
     }
 }
 
-void wifi_init_softap() {
+char* wifi_init_softap() {
     ESP_LOGI(LOGTAG, "Starting TCPIP");
     tcpip_adapter_init();
 
@@ -47,4 +47,6 @@ void wifi_init_softap() {
     ESP_ERROR_CHECK(esp_wifi_start());
 
     ESP_LOGI(LOGTAG, "wifi_init_softap finished. SSID:%s password:%s channel:%d", wifi_config.ap.ssid, WIFI_SOFTAP_PSK, 1);
+    
+    return strdup((char*)wifi_config.ap.ssid);
 }
