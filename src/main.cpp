@@ -83,10 +83,13 @@ void app_main() {
 			char bottomStr[64];
 			snprintf(qrStr, 64, "WIFI:T:WPA2;S:%s;P:%s;;", finalSSID, WIFI_SOFTAP_PSK);
 			snprintf(bottomStr, 64, "%s / %s", finalSSID, WIFI_SOFTAP_PSK);
+			free(finalSSID);
+
 			Screen* sW = new QrTag(paintBlack, paintRed, "WiFi Server", qrStr, bottomStr);
 			paintBlack->Clear(0);
 			paintRed->Clear(0);
 			sW->render();
+			
 			ESP_LOGI(LOGTAG, "Displaying WiFi QR");
 			epd->DispInit();
 			epd->DisplayFrame(imgBlack, imgRed);
