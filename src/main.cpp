@@ -80,12 +80,14 @@ void app_main() {
 			start_httpd_server(imgBlack, imgRed, xTaskGetCurrentTaskHandle());
 
 			char qrStr[64];
-			char bottomStr[64];
+			char bottomStr1[64];
+			char bottomStr2[64];
 			snprintf(qrStr, 64, "WIFI:T:WPA2;S:%s;P:%s;;", finalSSID, WIFI_SOFTAP_PSK);
-			snprintf(bottomStr, 64, "%s / %s", finalSSID, WIFI_SOFTAP_PSK);
+			snprintf(bottomStr1, 64, "SSID: %s", finalSSID);
+			snprintf(bottomStr2, 64, "Pwd: %s", WIFI_SOFTAP_PSK);
 			free(finalSSID);
 
-			Screen* sW = new QrTag(paintBlack, paintRed, "WiFi Server", qrStr, bottomStr);
+			Screen* sW = new QrTag(paintBlack, paintRed, "WiFi Server", qrStr, bottomStr1, bottomStr2);
 			paintBlack->Clear(0);
 			paintRed->Clear(0);
 			sW->render();

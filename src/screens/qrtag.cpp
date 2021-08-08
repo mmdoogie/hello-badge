@@ -8,12 +8,13 @@
 
 #include "qrcode.h"
 
-QrTag::QrTag(Paint* paintBlack, Paint* paintRed, const char* title, const char* content, const char* preview) {
+QrTag::QrTag(Paint* paintBlack, Paint* paintRed, const char* title, const char* content, const char* preview1, const char* preview2) {
 	_paintBlack = paintBlack;
 	_paintRed = paintRed;
 	_title = title;
 	_content = content;
-	_preview = preview;
+	_preview1 = preview1;
+	_preview2 = preview2;
 }
 
 void QrTag::render() {
@@ -40,7 +41,12 @@ void QrTag::render() {
 	_paintRed->DrawStringCenteredIn(0, 0, EPD_WIDTH, y0, _title, NovaFlatRegular32, 0);
 
 	y0 += qr.size * 2;
-	_paintBlack->DrawStringCenteredIn(0, y0, EPD_WIDTH, EPD_HEIGHT - y0, _preview, NunitoRegular13, 1);
+	if (!_preview2) {
+		_paintBlack->DrawStringCenteredIn(0, y0, EPD_WIDTH, EPD_HEIGHT - y0, _preview1, NunitoRegular13, 1);
+	} else {
+		_paintBlack->DrawStringCenteredIn(0, y0 - 7, EPD_WIDTH, EPD_HEIGHT - y0, _preview1, NunitoRegular13, 1);
+		_paintBlack->DrawStringCenteredIn(0, y0 + 7, EPD_WIDTH, EPD_HEIGHT - y0, _preview2, NunitoRegular13, 1);
+	}
 
 	free(qrBuff);
 }

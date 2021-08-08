@@ -10,12 +10,13 @@
 
 class QrTag : public Screen {
 	public:
-		QrTag(Paint* paintBlack, Paint* paintRed, const char* title, const char* content, const char* preview);
+		QrTag(Paint* paintBlack, Paint* paintRed, const char* title, const char* content, const char* preview1, const char* preview2 = 0);
 		void render();
 	private:
 		const char* _title;
 		const char* _content;
-		const char* _preview;
+		const char* _preview1;
+		const char* _preview2;
 };
 
 #endif
